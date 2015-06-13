@@ -43,61 +43,41 @@ body
 /* 
 **LoadingBar
 */
-var LoadingBar = React.createClass({
-
-  	componentDidMount: function() {
-		
-		function LoadingBar(id,percent,percentNum)
-		{
-			this.loadbar = $(id);
-			this.percentEle = $(percent, this.loadbar);
-			this.percentNumEle = $(percentNum, this.loadbar);
-			this.max = 100;
-			this.currentProgress = 0;
+var IntervalMixin = function(interval) {
+	return {
+		componentDidMount: function() {
+			this._intervals = setInterval(this.Time,interval);
+		},
+		componentWillUnmount: function() {
+			clearInterval(this._intervals);;
 		}
-		LoadingBar.prototype = {
-			constructor: LoadingBar,
-			setMax: function (maxVal)
-			{
-				this.max = maxVal;
-			},
-			setProgress: function (val)
-			{
-				if (val >= this.max)
-				{
-					val = this.max;
-				}
-				this.currentProgress = parseInt((val / this.max) * 100) + "%";
-				this.percentEle.width(this.currentProgress);
-				this.percentNumEle.text(this.currentProgress);
-		
-		
-			}
-		};
-		
-		var loadbar = new LoadingBar(React.findDOMNode(this.refs.loadBar01),React.findDOMNode(this.refs.percent),React.findDOMNode(this.refs.percentNum));
-		var max = 1000;
-		loadbar.setMax(max);
-		var i = 0;
-		var time = setInterval(function ()
-		{
-			loadbar.setProgress(i);
-			if (i == max)
-			{
-				clearInterval(time);
-				return;
-			}
-			i += 10;
-		}, 40);
-		
-  	},
+	};
+};
+
+var LoadingBar = React.createClass({
+	
+	mixins: [IntervalMixin(40)],
+	
+	getInitialState: function () {
+		return {rate: 0};
+	},
+	
+	Time: function() {
+		this.setState({rate: this.state.rate + 10});
+	},
 	
   	render: function() {
+		
+		if (this.state.rate >= 1000) {
+			this.state.rate = 1000;
+		}
+		
+		var currentProgress = parseInt((this.state.rate / 1000) * 100) + "%";
 		
 		var content = {
 			position:'absolute',
 			top:'50%',
-			margin:'-18px auto 0 auto',
+			margin:'-29px auto 0 auto',
 			width: '95%'
 		};
 		
@@ -120,7 +100,7 @@ var LoadingBar = React.createClass({
 		
 		var percent = {
 			boxShadow: 'inset 0 -2px 6px rgba(0, 0, 0, .4)',
-			width: '0%',
+			width: currentProgress,
 			height:'100%',
 			display:'block',
 			position:'absolute',
@@ -130,7 +110,6 @@ var LoadingBar = React.createClass({
 		};
 		
 		var percentI = {
-			boxShadow: 'inset 0 -2px 6px rgba(0, 0, 0, .4)',
 			width: '0%',
 			height:'100%',
 			display:'block',
@@ -158,13 +137,13 @@ var LoadingBar = React.createClass({
 		
     	return (
 			<div style={content}>
-				<div ref="loadBar01" style={loadBar}>
+				<div style={loadBar}>
 					<div style={loadBarDiv}>
-						 <span ref="percent" style={percent}>
+						 <span style={percent}>
 							<i style={percentI}></i>
 						 </span>
 					</div>
-					<span ref="percentNum" style={percentNum}>0%</span>
+					<span style={percentNum}>{currentProgress}</span>
 				</div>
 			</div> 
 		);
